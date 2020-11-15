@@ -27,10 +27,10 @@ var enableAuth bool
 
 // Image type struct
 type Image struct {
-	Name        string    `json:"name"`
-	Time        time.Time `json:"created"`
-	Size        int64     `json:"size"`
-	IsDirectory bool      `json:"isDirectory"`
+	Name string    `json:"name"`
+	Time time.Time `json:"created"`
+	Size int64     `json:"size"`
+	File string    `json:"file"`
 }
 
 // Images type struct
@@ -50,9 +50,7 @@ type Message struct {
 
 // Metadata type struct
 type Metadata struct {
-	FileName   string `json:"file_name"`
-	CreateDate string `json:"create_date"`
-	FileSize   int64  `json:"file_size"`
+	Name string `json:"name"`
 }
 
 func upload(c echo.Context) error {
@@ -66,8 +64,6 @@ func upload(c echo.Context) error {
 	for _, file := range files {
 
 		id := uuid.New()
-		now := time.Now()
-
 		// Source
 		src, err := file.Open()
 		if err != nil {
@@ -91,9 +87,7 @@ func upload(c echo.Context) error {
 		}
 
 		meta := Metadata{
-			FileName:   file.Filename,
-			FileSize:   file.Size,
-			CreateDate: now.Format("2006/01/02 15:04:05"),
+			Name: file.Filename,
 		}
 
 		metaFile, _ := json.MarshalIndent(meta, "", " ")
@@ -123,8 +117,16 @@ func list(c echo.Context) error {
 	images := []Image{}
 
 	for _, f := range files {
-
-		images = append(images, Image{Name: f.Name(), Time: f.ModTime(), Size: f.Size(), IsDirectory: f.IsDir()})
+		if !strings.HasSuffix(f.Name(), ".json") {
+			metaBytes, err := ioutil.ReadFile(fmt.Sprintf("%s/%s.json", storage, f.Name()))
+			if err == nil {
+				metaFile := Metadata{}
+				json.Unmarshal([]byte(metaBytes), &metaFile)
+				images = append(images, Image{Name: f.Name(), Time: f.ModTime(), Size: f.Size(), File: metaFile.Name})
+			} else {
+				images = append(images, Image{Name: f.Name(), Time: f.ModTime(), Size: f.Size(), File: ""})
+			}
+		}
 	}
 
 	return c.JSON(http.StatusOK, images)
