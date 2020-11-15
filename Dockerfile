@@ -5,7 +5,7 @@ COPY go.mod go.sum main.go /imgur/
 RUN CGO_ENABLED=0 GOOS=linux go build .
 
 FROM alpine:latest  
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates curl
 WORKDIR /imgur/
 COPY --from=0 /imgur/imgur .
 COPY public /imgur/public
