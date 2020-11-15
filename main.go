@@ -103,7 +103,7 @@ func upload(c echo.Context) error {
 		}
 
 		// Generate json metadata
-		links = append(links, fmt.Sprintf("%s/%s", storage, filename))
+		links = append(links, fmt.Sprintf("media/%s", filename))
 	}
 
 	return c.JSON(http.StatusOK, links)
